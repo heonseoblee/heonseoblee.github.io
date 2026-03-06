@@ -378,6 +378,11 @@
     margin-bottom: 0;
   }
 
+  /* Trace pre */
+  pre.trace .ok { color: var(--green); }
+  pre.trace .fail { color: var(--red); font-weight: 700; }
+  pre.trace .highlight { color: var(--yellow); }
+
   /* Trace diagram */
   .trace {
     background: var(--surface2);
@@ -699,7 +704,7 @@
       </div>
       <div class="overview-item full">
         <div class="overview-label">핵심 메시지</div>
-        <div class="overview-value">"보이게 만들면 책임질 수 있다. 그 '보이게 만드는 것'의 이름이 Observability다."</div>
+        <div class="overview-value">"Observability는 사람이 보기 위한 것이었다. 이제는 에이전트가 판단하기 위한 것이 된다. 그 기반을 지금 만드는 사람이 다음 시대를 가져간다."</div>
       </div>
     </div>
 
@@ -726,6 +731,10 @@
         <div class="level-num">LEVEL 4</div>
         <div class="level-name">Real-time APM</div>
       </div>
+      <div class="level-step active">
+        <div class="level-num">LEVEL 5</div>
+        <div class="level-name">Agentic</div>
+      </div>
     </div>
   </section>
 
@@ -734,18 +743,20 @@
     <h2>시간 배분</h2>
     <div class="time-bar">
       <div class="time-segment">3분</div>
-      <div class="time-segment">8분</div>
-      <div class="time-segment">8분</div>
       <div class="time-segment">6분</div>
-      <div class="time-segment">12분</div>
-      <div class="time-segment">3분</div>
+      <div class="time-segment">6분</div>
+      <div class="time-segment">5분</div>
+      <div class="time-segment">8분</div>
+      <div class="time-segment" style="background:var(--orange); flex:8;">8분</div>
+      <div class="time-segment">4분</div>
     </div>
     <div class="time-legend">
       <span class="t1">오프닝</span>
       <span class="t2">에피소드 1: Log</span>
       <span class="t3">에피소드 2: Tracing</span>
       <span class="t4">에피소드 3: Dashboard</span>
-      <span class="t5">실무 적용</span>
+      <span class="t5">실무 적용 (WhaTap)</span>
+      <span style="color:var(--text-dim);"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle;background:var(--orange);"></span>Level 5: Agentic</span>
       <span class="t6">클로징</span>
     </div>
   </section>
@@ -761,6 +772,13 @@
       <p>사장님: "화면이 10초나 걸려요."<br>
       나: "제 자리에서는 괜찮은데요...?"</p>
     </blockquote>
+
+    <p>잠깐, 여기서 질문 하나 드릴게요.</p>
+
+    <div class="takeaway" style="margin-bottom:24px;">
+      <p style="font-size:15px;">배포 후 1시간, 여러분은 지금 뭘 보고 계세요?<br>
+      <span style="font-weight:400; color:var(--text-dim); font-size:14px;">슬랙 알림? 대시보드? 아니면 아무것도 안 보고 있나요?</span></p>
+    </div>
 
     <p>이게 끝나면 다행인데, 연쇄적으로 벌어집니다:</p>
     <ul style="list-style:none; padding:0; margin:0 0 16px;">
@@ -807,6 +825,8 @@
         <p>"에러가 나고 있다는 건 알겠는데, 어떤 조건에서 나는지 모르면 고칠 수가 없습니다."</p>
       </blockquote>
 
+      <p style="color:var(--text-dim); font-style:italic; font-size:14px; margin-bottom:20px;">사실 저도 알고 있었는데 안 했습니다. "지금 돌아가니까 나중에 하지 뭐" 하고요. CS 인입 세 번 당하고 나서 바꿨습니다.</p>
+
       <div class="solution">
         <div class="block-label">Structured Log로 바꾸면</div>
         <ul>
@@ -816,16 +836,25 @@
         </ul>
       </div>
 
+      <pre><span style="color:var(--text-dim)">// build.gradle</span>
+<span style="color:var(--accent-light)">implementation</span> 'net.logstash.logback:logstash-logback-encoder:7.4'</pre>
+
       <pre><span style="color:var(--text-dim)">// Before</span>
 <span style="color:var(--red)">log.error("주문 처리 실패: " + e.getMessage());</span>
 
 <span style="color:var(--text-dim)">// After</span>
-<span style="color:var(--green)">log.error("주문 처리 실패: orderId={}, userId={}, path={}, error={}",
-    orderId, userId, request.getPath(), e.getClass().getSimpleName());</span></pre>
+<span style="color:var(--green)">import static net.logstash.logback.argument.StructuredArguments.*;
 
-<pre><span style="color:var(--text-dim)">// 출력 결과</span>
+log.error("주문 처리 실패",
+    kv("orderId", orderId),
+    kv("userId", userId),
+    kv("path", request.getPath()),
+    kv("error", e.getClass().getSimpleName()));</span></pre>
+
+      <pre><span style="color:var(--text-dim)">// 출력 결과 (JSON)</span>
 {
   <span style="color:var(--accent-light)">"level"</span>: "ERROR",
+  <span style="color:var(--accent-light)">"message"</span>: "주문 처리 실패",
   <span style="color:var(--accent-light)">"orderId"</span>: "ord-12345",
   <span style="color:var(--accent-light)">"userId"</span>: "user-789",
   <span style="color:var(--accent-light)">"path"</span>: "/api/v1/orders",
@@ -847,110 +876,174 @@
         <span class="episode-badge">Level 1 &rarr; 2</span>
         <span class="episode-time">8분</span>
       </div>
-      <h3>에피소드 2: "느려지고 있는데, 왜 느린지 모른다"</h3>
+      <h3>에피소드 2: "우리 코드 문제 아닌 것 같은데요 — 근데 증거가 있나요?"</h3>
 
       <div class="problem">
-        <div class="block-label">문제 상황 A &mdash; N+1</div>
-        <ul>
-          <li>신기능에 <code>@OneToMany</code> 관계 추가. 개발 환경에선 데이터 10건이라 문제 없음</li>
-          <li>운영에서 데이터 1,000건 &rarr; 쿼리 1,001번 실행</li>
-          <li>해당 API만 점진적으로 느려짐. 에러도 안 나고, 로그에도 안 남음</li>
-        </ul>
-      </div>
-
-      <div class="problem">
-        <div class="block-label">문제 상황 B &mdash; 외부 의존성</div>
+        <div class="block-label">문제 상황 — 외부 의존성</div>
         <ul>
           <li>결제 API 응답이 간헐적으로 30초</li>
           <li>우리 코드는 멀쩡한데, 외부 PG사 API가 타임아웃</li>
           <li>"우리 쪽 문제 아닌 것 같은데요"라고 말하려면 <strong>증거</strong>가 있어야 함</li>
+          <li>Structured Log로는 "결제 API가 느리다"까지만 알 수 있음. 근데 <strong>왜?</strong></li>
         </ul>
       </div>
 
-      <p>Structured Log로 "결제 API가 느리다"까진 알았다. 근데 <strong>왜?</strong></p>
+      <p>먼저 결과를 보여드리겠습니다. Tracing을 켜면 이렇게 보입니다:</p>
 
-      <div class="solution">
-        <div class="block-label">Tracing을 켜면</div>
-        <ul>
-          <li>요청의 전체 흐름이 부모/자식 스팬으로 보임</li>
-          <li>어디서 시간이 소비되는지 숫자로 확인 가능</li>
-          <li>내부 문제인지, 외부 문제인지 즉시 구분</li>
-        </ul>
-      </div>
-
-      <div class="trace">
-<span class="highlight">POST /api/v1/payments (30,042ms)</span>
+      <pre class="trace"><span class="highlight">POST /api/v1/payments (30,042ms)</span>
 ├── validateOrder        (30ms)   <span class="ok">OK</span>
 ├── calculateShipping    (12ms)   <span class="ok">OK</span>
-├── processPayment      (29,800ms) <span class="fail">FAIL &larr; 여기!</span>
-│   └── HTTP Call: pg.example.com  (29,750ms) <span class="fail">&larr; 외부 PG사 타임아웃</span>
-└── finalizeOrder        (200ms)  <span class="ok">OK</span>
-      </div>
+├── processPayment      (29,800ms) <span class="fail">FAIL ← 여기!</span>
+│   └── HTTP Call: pg.example.com  (29,750ms) <span class="fail">← 외부 PG사 타임아웃</span>
+└── finalizeOrder        (200ms)  <span class="ok">OK</span></pre>
 
       <blockquote>
         <p>"아, 우리 코드가 아니라 PG사 API가 느린 거구나."<br>
-        이게 grep으로는 절대 안 나오는 정보입니다.</p>
+        이게 grep으로는 절대 안 나오는 정보입니다. 그리고 이게 <strong>증거</strong>입니다.</p>
       </blockquote>
 
-      <p>N+1도 마찬가지:</p>
+      <p>N+1도 같은 방식으로 잡힙니다. 에러도 안 나고, 로그에도 안 남는 그 느림의 원인이 숫자로 나옵니다:</p>
 
-      <div class="trace">
-<span class="highlight">GET /api/v1/orders (3,200ms)</span>
+      <pre class="trace"><span class="highlight">GET /api/v1/orders (3,200ms)</span>
 ├── findOrder           (5ms)    <span class="ok">OK</span>
 ├── SELECT order         (3ms)    <span class="ok">OK</span>
-├── SELECT item          (2ms)    <span class="ok">OK</span> <span class="fail">&larr; &times; 1,000번 반복!</span>
+├── SELECT item          (2ms)    <span class="ok">OK</span> <span class="fail">← × 1,000번 반복!</span>
 ...
-└── (총 SQL 1,001회)              <span class="fail">N+1 PROBLEM</span>
+└── (총 SQL 1,001회)              <span class="fail">N+1 PROBLEM</span></pre>
+
+      <div class="solution">
+        <div class="block-label">Tracing 도입 방법</div>
+        <ul>
+          <li>OpenTelemetry + Grafana Tempo 조합으로 오픈소스로도 구축 가능</li>
+          <li>요청이 <strong>끝난 뒤</strong> 전체 흐름을 추적하고 분석할 수 있음</li>
+          <li>원인 파악, 병목 위치, 외부 의존성 구분 — 여기까지는 됩니다</li>
+        </ul>
       </div>
 
-      <p>Spring Boot에서는 이런 코드면 됩니다:</p>
-
-      <pre><span style="color:var(--green)">@Observed</span>(name = "order.process", contextualName = "processOrder")
-public Order processOrder(String id) {
-    processingSteps.validateOrder(order);
-    processingSteps.calculateShipping(order);
-    processingSteps.finalizeOrder(order);
-}</pre>
-
-      <div class="takeaway">
-        <p>"Spring Boot 4는 <code>@Observed</code> 어노테이션 하나로 자동 추적.<br>
-        Micrometer + OpenTelemetry 기본 내장, 설정 최소."</p>
-      </div>
+      <blockquote>
+        <p>근데 오픈소스 트레이싱이 못 하는 게 하나 있습니다.<br>
+        <strong>"지금 이 순간" 뭐가 막혀있는지.</strong><br>
+        요청이 끝나야 데이터가 쌓입니다. 장애는 지금 일어나고 있는데.</p>
+      </blockquote>
 
       <div class="screenshot">스크린샷: 트레이스 뷰 &mdash; 외부 PG사 타임아웃 (부모/자식 스팬)</div>
       <div class="screenshot">스크린샷: 트레이스 뷰 &mdash; N+1 쿼리 (SQL 반복 호출)</div>
     </div>
   </section>
 
-  <!-- ==================== EPISODE 3 ==================== -->
+  <!-- ==================== 추가 실무 사례 ==================== -->
+  <section>
+    <h2>실무 사례 — 트레이싱 없이는 못 잡는 것들</h2>
+    <p style="color:var(--text-dim); margin-bottom:32px;">발표에서는 슬라이드 한 장씩 빠르게 소개. "이런 경우 있으셨나요?" 질문과 함께.</p>
+
+    <div style="display:grid; gap:16px;">
+
+      <!-- 사례 1 -->
+      <div class="episode level-1-2" style="padding:24px;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+          <span class="episode-badge" style="background:rgba(116,185,255,0.15); color:var(--blue);">사례 1</span>
+          <span style="font-size:15px; font-weight:700; color:var(--text);">재고 서비스가 특정 시간대만 느리다</span>
+        </div>
+        <p style="font-size:14px; margin-bottom:12px;">주문 API는 멀쩡한데 오후 2시마다 P95가 튄다. 로그엔 "재고 조회 완료"만 있음.</p>
+        <pre class="trace"><span class="highlight">POST /api/v1/orders (4,200ms)</span>  <span style="color:var(--text-dim)">← 평소엔 300ms</span>
+├── validateUser        (20ms)   <span class="ok">OK</span>
+├── checkInventory     (3,900ms) <span class="fail">← 여기!</span>
+│   └── HTTP Call: inventory-service (3,850ms) <span class="fail">← 배치 작업 중</span>
+└── createOrder         (280ms)  <span class="ok">OK</span></pre>
+        <p style="font-size:13px; color:var(--text-dim); margin-bottom:0;">재고 서비스가 오후 2시에 배치 집계 작업을 돌리고 있었음. 로그만 봤으면 "가끔 느린 거겠지"로 넘어갔을 것.</p>
+      </div>
+
+      <!-- 사례 2 -->
+      <div class="episode level-1-2" style="padding:24px;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+          <span class="episode-badge" style="background:rgba(116,185,255,0.15); color:var(--blue);">사례 2</span>
+          <span style="font-size:15px; font-weight:700; color:var(--text);">회원가입은 됐는데 인증 메일이 안 온다</span>
+        </div>
+        <p style="font-size:14px; margin-bottom:12px;">API 응답은 200 정상. 에러 없음. 근데 사용자 CS: "메일이 안 와요."</p>
+        <pre class="trace"><span class="highlight">POST /api/v1/signup (120ms)</span>  <span class="ok">200 OK</span>  <span style="color:var(--text-dim)">← 코드상 문제없음</span>
+├── createUser          (80ms)   <span class="ok">OK</span>
+└── publishEvent → <span style="color:var(--yellow)">email-queue</span>  <span style="color:var(--text-dim)">← 여기서 끊김</span>
+
+<span style="color:var(--text-dim)">// 비동기 큐 이후는 요청-응답 밖</span>
+<span style="color:var(--yellow)">email-queue</span> → email-worker  <span class="fail">← 워커 다운, 큐 적체 8,000건</span></pre>
+        <p style="font-size:13px; color:var(--text-dim); margin-bottom:0;">비동기 처리라 요청은 성공. 트레이싱 없으면 큐 이후가 블랙박스.</p>
+      </div>
+
+      <!-- 사례 3 -->
+      <div class="episode level-1-2" style="padding:24px;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+          <span class="episode-badge" style="background:rgba(116,185,255,0.15); color:var(--blue);">사례 3</span>
+          <span style="font-size:15px; font-weight:700; color:var(--text);">각각은 빠른데 합치면 느리다</span>
+        </div>
+        <p style="font-size:14px; margin-bottom:12px;">상품 상세 API가 3초. 각 서비스 로그엔 다 "1초 이내 완료".</p>
+        <pre class="trace"><span class="highlight">GET /api/v1/product/123 (2,800ms)</span>
+├── getProduct          (50ms)   <span class="ok">OK</span>
+├── getReviews          (900ms)  <span class="ok">OK</span>  <span style="color:var(--text-dim)">← 순차 실행</span>
+├── getRecommendations  (950ms)  <span class="ok">OK</span>  <span style="color:var(--text-dim)">← 순차 실행</span>
+└── getInventory        (880ms)  <span class="ok">OK</span>  <span style="color:var(--text-dim)">← 순차 실행</span></pre>
+        <p style="font-size:13px; color:var(--text-dim); margin-bottom:0;">에러 없음. 각 서비스 정상. 근데 직렬 호출이라 합산 3초. 병렬로 바꾸면 950ms. 트레이싱 없이는 원인이 코드에 있는지 외부에 있는지도 모름.</p>
+      </div>
+
+      <!-- 사례 4 -->
+      <div class="episode level-1-2" style="padding:24px;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+          <span class="episode-badge" style="background:rgba(116,185,255,0.15); color:var(--blue);">사례 4</span>
+          <span style="font-size:15px; font-weight:700; color:var(--text);">DB 커넥션 풀이 꽉 찼다</span>
+        </div>
+        <p style="font-size:14px; margin-bottom:12px;">에러율 0%. 전체적으로 느려짐. 로그엔 아무것도 없음.</p>
+        <pre class="trace"><span style="color:var(--text-dim)">// Active Transaction 목록 (지금 이 순간)</span>
+<span class="fail">30개 요청이 전부 WAITING_FOR_DB_CONNECTION 상태</span>
+
+POST /api/v1/orders      (8,200ms)  <span style="color:var(--yellow)">WAITING</span>
+POST /api/v1/orders      (7,900ms)  <span style="color:var(--yellow)">WAITING</span>
+POST /api/v1/orders      (7,650ms)  <span style="color:var(--yellow)">WAITING</span>
+... (27개 더)</pre>
+        <p style="font-size:13px; color:var(--text-dim); margin-bottom:0;">커넥션 풀 사이즈 10, 동시 요청 40. 로그 기반 트레이싱은 요청이 끝나야 보임. APM 실시간 Active Transaction이 있어야 "지금 이 순간"을 잡을 수 있음.</p>
+      </div>
+
+    </div>
+
+    <div class="takeaway" style="margin-top:32px;">
+      <p style="font-size:14px; font-weight:400; color:var(--text-dim); margin-bottom:8px;">공통점</p>
+      <p>에러가 없다. 로그가 깨끗하다. 근데 느리다.<br>
+      <strong>보이지 않으니까 고칠 수가 없다.</strong></p>
+    </div>
+  </section>
   <section>
     <div class="episode level-2-3">
       <div class="episode-header">
         <span class="episode-badge">Level 2 &rarr; 3</span>
         <span class="episode-time">6분</span>
       </div>
-      <h3>에피소드 3: 사장님 &mdash; "느리다"</h3>
+      <h3>에피소드 3: "에러는 없는데 — 왜 결제가 안 되는 거죠?"</h3>
 
       <div class="problem">
         <div class="block-label">문제 상황</div>
         <ul>
-          <li>사장님 전화: "화면이 느려요"</li>
-          <li>내 자리에서는 200ms. 재현이 안 됨</li>
-          <li>"제 자리에서는 괜찮은데요..." 하고 넘기거나, 데이터로 답하거나</li>
+          <li>배포 후 에러율 정상. 로그도 깨끗함</li>
+          <li>근데 CS팀: "결제 완료가 안 된다는 문의가 계속 들어와요"</li>
+          <li>내 자리에서는 결제 잘 됨. 재현이 안 됨</li>
+          <li>대부분의 사용자는 괜찮은데 — 어떤 사용자가, 어떤 조건에서?</li>
         </ul>
       </div>
 
       <div class="solution">
         <div class="block-label">Dashboard가 있으면</div>
         <ul>
-          <li>P50 = 200ms, P95 = 10초 &rarr; "대부분은 괜찮은데 <strong>상위 5%가 문제</strong>"</li>
-          <li>엔드포인트별 비교 &rarr; <code>/api/payments</code>만 느림</li>
-          <li>배포 전후 추이 &rarr; v2.3.1 이후 P95 급등</li>
+          <li><strong>P50 = 200ms, P95 = 10초</strong> &rarr; 대부분은 빠른데, 상위 5%가 문제</li>
+          <li>엔드포인트별 비교 &rarr; <code>/api/payments</code>만 P95 급등</li>
+          <li>배포 전후 추이 &rarr; v2.3.1 이후부터 시작됨</li>
         </ul>
       </div>
 
+      <p style="font-size:13px; color:var(--text-dim); margin-bottom:16px;">
+        <strong style="color:var(--accent-light);">P50 / P95 / P99란?</strong><br>
+        100명이 API를 호출했을 때, P50은 50번째로 느린 사람의 응답시간, P95는 95번째의 응답시간입니다. 
+        P50이 빨라도 P95가 느리면 — 100명 중 5명은 10초를 기다리고 있다는 뜻입니다.
+      </p>
+
       <blockquote>
-        <p>"사장님, 90%는 정상입니다. /api/payments의 P95가 10초인데, 외부 PG사 타임아웃이 원인입니다. 대응 중입니다."</p>
+        <p>"에러율은 정상입니다. 하지만 /api/payments의 P95가 10초입니다. 100명 중 5명이 결제 페이지에서 10초를 기다리다 이탈하고 있습니다. 원인은 외부 PG사 타임아웃이고, 대응 중입니다."</p>
       </blockquote>
 
       <div class="takeaway">
@@ -993,7 +1086,8 @@ public Order processOrder(String id) {
 
       <h4>A. WhaTap으로 보는 실시간 모니터링 (8분)</h4>
 
-      <p>"지금까지 '보이게 만드는 과정'을 이야기했습니다. 저는 WhaTap이라는 모니터링 서비스를 만드는 회사에서 일하고 있는데요, 실무에서 이것들이 어떻게 보이는지 보여드리겠습니다."</p>
+      <p>솔직히 말씀드리면, 저는 WhaTap이라는 모니터링 서비스를 만드는 회사에서 일하고 있어서 편향이 있을 수 있습니다. 그 점 감안해서 들어주세요.</p>
+      <p>다만 아까 이야기한 그 한 가지 — <strong>"지금 이 순간 뭐가 막혀있는지"</strong> — 그게 실제로 어떻게 보이는지는 보여드리고 싶었습니다.</p>
 
       <div class="whatap-grid">
         <div class="whatap-card">
@@ -1044,12 +1138,91 @@ public Order processOrder(String id) {
 
   <hr class="divider">
 
+  <!-- ==================== LEVEL 5: AGENTIC ==================== -->
+  <section>
+    <div class="episode" style="border-color: rgba(243,156,18,0.3);">
+      <div style="position:absolute; top:0; left:0; width:4px; height:100%; background:var(--orange);"></div>
+      <div class="episode-header">
+        <span class="episode-badge" style="background:rgba(243,156,18,0.15); color:var(--orange);">Level 5 — Agentic</span>
+        <span class="episode-time">8분</span>
+      </div>
+      <h3>다음 질문: 사람이 안 봐도 된다면?</h3>
+
+      <p>지금까지 이야기한 것들의 전제는 하나였습니다. <strong>사람이 본다.</strong></p>
+      <p>대시보드를 열고, 히트맵을 읽고, 판단하고, 대응하는 사람.</p>
+
+      <div class="takeaway" style="margin: 24px 0;">
+        <p style="font-size:15px;">그 전제가 바뀌고 있습니다.<br>
+        <span style="font-weight:400; color:var(--text-dim); font-size:14px;">에이전트가 직접 모니터링 데이터를 소비하고, 판단하고, 대응합니다.</span></p>
+      </div>
+
+      <h4>지금 일어나고 있는 일</h4>
+
+      <div class="solution">
+        <div class="block-label">Agentic Monitoring 패러다임</div>
+        <ul>
+          <li>Honeycomb MCP, Datadog MCP — 에이전트가 직접 트레이스/메트릭 조회</li>
+          <li>"P95가 튀고 있다" → 에이전트가 원인 분석 → 자동 대응 또는 PR 생성</li>
+          <li>사람은 대시보드를 보는 게 아니라 <strong>에이전트의 판단 결과를 승인</strong></li>
+        </ul>
+      </div>
+
+      <pre class="trace" style="margin: 24px 0;"><span style="color:var(--text-dim);">// 지금 패러다임</span>
+<span style="color:var(--yellow);">P95 급등 감지</span> → 대시보드 알림 → <span style="color:var(--blue);">개발자 확인</span> → 원인 분석 → 대응
+<span style="color:var(--text-dim);">                                    ↑ 사람이 개입하는 지점</span>
+
+<span style="color:var(--text-dim);">// 다음 패러다임</span>
+<span style="color:var(--yellow);">P95 급등 감지</span> → <span style="color:var(--orange);">에이전트: 트레이스 조회 → 원인 특정 → 해결 방안 제시</span> → <span style="color:var(--green);">개발자 승인</span></pre>
+
+      <h4>그러면 Observability는 의미 없어지는 건가요?</h4>
+
+      <blockquote>
+        <p>반대입니다. <strong>더 중요해집니다.</strong><br>
+        에이전트가 보려면 — 볼 수 있는 데이터가 먼저 있어야 합니다.</p>
+      </blockquote>
+
+      <p>에이전트는 없는 데이터를 만들어낼 수 없습니다. <code>log.error("결제 실패: " + e.getMessage())</code> 뿐인 로그에서 에이전트도 할 수 있는 게 없습니다.</p>
+
+      <p>Observability의 정의가 바뀌는 겁니다.</p>
+
+      <table>
+        <thead>
+          <tr><th>패러다임</th><th>Observability의 목적</th><th>설계 기준</th></tr>
+        </thead>
+        <tbody>
+          <tr><td style="color:var(--blue);">지금</td><td>사람이 읽을 수 있게</td><td>시각화, 대시보드</td></tr>
+          <tr><td style="color:var(--orange);">다음</td><td>에이전트가 판단할 수 있게</td><td>구조화, 컨텍스트 밀도</td></tr>
+        </tbody>
+      </table>
+
+      <h4>WhaTap이 가고 있는 방향</h4>
+
+      <p>대시보드를 없애는 게 아닙니다. 대시보드 너머를 설계하는 겁니다.</p>
+
+      <div class="whatap-grid">
+        <div class="whatap-card">
+          <h4 style="color:var(--orange);">에이전트가 소비하는 모니터링 데이터</h4>
+          <p>사람이 읽는 시각화 → 에이전트가 쿼리할 수 있는 구조화된 데이터로. 트레이스, 메트릭, 로그가 MCP를 통해 에이전트의 감각기관이 됩니다.</p>
+        </div>
+        <div class="whatap-card">
+          <h4 style="color:var(--orange);">자율 대응 워크플로우</h4>
+          <p>감지 → 분석 → 대응의 루프를 에이전트가 수행. 사람은 임계값을 정의하고 결과를 승인합니다. 장애 대응 시간이 분 단위에서 초 단위로.</p>
+        </div>
+      </div>
+
+      <div class="takeaway">
+        <p>"지금 로그 한 줄을 구조화하는 게,<br>
+        <strong>에이전트가 판단할 수 있는 기반을 만드는 일입니다.</strong>"</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
   <!-- ==================== CLOSING ==================== -->
   <section>
-    <h2>클로징 &mdash; 3분</h2>
+    <h2>클로징 &mdash; 4분</h2>
     <h3>"보이게 만드는 사람"</h3>
-
-    <h4>한 단계씩</h4>
 
     <ol class="steps">
       <li>
@@ -1058,7 +1231,7 @@ public Order processOrder(String id) {
       </li>
       <li>
         <span class="step-title">Tracing</span>
-        <span class="step-desc">왜 느린지, 어디서 막히는지. &mdash; <code>@Observed</code> 한 줄 (Spring Boot)</span>
+        <span class="step-desc">왜 느린지, 어디서 막히는지. &mdash; OTel + 오픈소스 스택으로 시작 가능</span>
       </li>
       <li>
         <span class="step-title">Dashboard</span>
@@ -1068,17 +1241,49 @@ public Order processOrder(String id) {
         <span class="step-title">Real-time APM</span>
         <span class="step-desc">지금 이 순간 무슨 일이 일어나는지. &mdash; WhaTap 같은 APM 도입</span>
       </li>
+      <li>
+        <span class="step-title" style="color:var(--orange);">Agentic Monitoring</span>
+        <span class="step-desc">에이전트가 판단하고 대응하는 기반. &mdash; 지금 만드는 데이터 구조가 내일의 기반</span>
+      </li>
     </ol>
 
     <div class="closing">
       <h3>"보이지 않는 것을 보이게 만들고,<br>보이는 것에서 의미를 읽어내는 것."</h3>
       <p>
-        배포 후 1시간.<br>
-        터미널에서 <code>grep ERROR</code> 치고 있을 건지,<br>
-        대시보드를 열어 분포와 추이를 읽고 있을 건지.<br><br>
-        그 차이는 실력이 아니라, <strong>보이게 만들어 놨느냐</strong>입니다.<br>
-        오늘, 로그 한 줄 바꾸는 것부터 시작하세요.
+        사람이 대시보드를 보는 시대가 끝나가고 있습니다.<br>
+        에이전트가 데이터를 소비하고, 판단하고, 대응합니다.<br><br>
+        그래도 바뀌지 않는 게 있습니다.<br>
+        <strong>어떤 데이터를 남길지는 여전히 당신이 설계합니다.</strong>
       </p>
+
+      <div style="margin: 32px 0; padding: 28px; background: rgba(108,92,231,0.08); border: 1px solid rgba(108,92,231,0.25); border-radius: 12px;">
+        <p style="font-size:15px; color:var(--text); font-weight:700; margin-bottom:12px;">
+          AI 시대에 희소한 건 지식이 아닙니다.
+        </p>
+        <p style="font-size:14px; color:var(--text-dim); margin-bottom:12px;">
+          <code>@Observed</code> 어노테이션을 붙이는 방법은 AI가 압니다.<br>
+          Structured Log를 써야 한다는 것도 AI가 압니다.<br>
+          P95가 뭔지도 AI가 압니다.
+        </p>
+        <p style="font-size:15px; color:var(--text); font-weight:500; margin-bottom:0;">
+          근데 <strong style="color:var(--accent-light);">이 시스템에서 무엇을 관찰해야 의미 있는지</strong>—<br>
+          그건 경험과 감각에서 나옵니다.<br>
+          <strong>Taste.</strong> 무엇이 좋은지 아는 것.
+        </p>
+      </div>
+
+      <div style="margin: 32px 0; padding: 28px; background: rgba(243,156,18,0.08); border: 1px solid rgba(243,156,18,0.25); border-radius: 12px;">
+        <p style="font-size:15px; color:var(--text); font-weight:500; margin-bottom:12px;">
+          Observability를 아는 개발자와 모르는 개발자의 차이는,<br>
+          <strong style="color:var(--orange);">에이전트 시대에 오히려 더 벌어집니다.</strong>
+        </p>
+        <p style="font-size:14px; color:var(--text-dim); margin-bottom:0;">
+          에이전트는 없는 데이터를 만들어낼 수 없습니다.<br>
+          taste 없는 사람이 설계한 데이터로는 에이전트도 좋은 판단을 못 합니다.
+        </p>
+      </div>
+
+      <p>오늘, 로그 한 줄 바꾸는 것부터 시작하세요.</p>
       <p class="final-question">"배포 후 1시간, 무엇을 보고 계실 건가요?"</p>
     </div>
   </section>
